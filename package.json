@@ -1,0 +1,24 @@
+{
+  "name": "nst",
+  "version": "0.0.0",
+  "description": "一个node服务工具，可快速便捷创建一个web服务，及其他功能",
+  "main": "index.js",
+  "bin": "bin/Nst.js",
+  "dependencies": {
+    "ncommand": "0.0.5"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zys8119/nst.git"
+  },
+  "author": "张云山",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zys8119/nst/issues"
+  },
+  "homepage": "https://github.com/zys8119/nst#readme",
+  "devDependencies": {}
+}
