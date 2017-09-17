@@ -86,7 +86,8 @@ command.prototype = {
             StrTitle:StrTitle,
             arguments:this[Str].arguments[0],
             callback:this[Str].arguments[0].callback || new Function,
-            init:this.inptInit
+            init:this.inptInit,
+            output:(this[Str].arguments[0].output === false)? false : true,//默认显示输出，即不开启隐藏命令
         });
         return this;
     },
@@ -94,7 +95,7 @@ command.prototype = {
      *@初始化命令方法
      *@param {String} Str
      */
-    inptInit:function (Str,StrTitle,argumentss) {
+    inptInit:function (Str,StrTitle,argumentss,initData) {
         Str = Str || "";
         StrTitle = StrTitle || "";
         var _this = this;
@@ -115,13 +116,17 @@ command.prototype = {
                 if(!args.log || args.log.constructor.name != "Array"){
                     this.ERR(`command.${Str}方法的command.${Str}.log 参数类型错误,
                         \n 应该为一个Array对象，例如：${Str}({log:"Array"})，说明：(必填)]`);
+                }else
+                if(args.output &&  args.output.constructor.name != "Boolean"){
+                    this.ERR(`command.${Str}方法的command.${Str}.output 参数类型错误,
+                        \n 应该为一个Boolean对象，例如：${Str}({output:"true"})，说明：(选填)]`);
                 }
             }else{
                 this.ERR(`command.${Str}方法参数类型错误,应该为一个Object对象，例如：${Str}a({log:"String:必填",callback:"function:选填"})`);
             }
         }
         //以下是颜色处理
-        if(args && args.log){
+        if(args && args.log && initData.output){
             args.log = args.log.map(function(e,i){
                 return ((i == 0)?"    ":" ")+JSON.stringify(e);
             });
@@ -241,7 +246,7 @@ command.prototype = {
                     //清除临时存储命令回调callback集合
                     _this.callbacks = [];
                     //执行回调,并且传入当前的argv和当前argv以后的argv参数
-                    if(!e.callback.call(_this,e.arguments.log, _this.argv.slice(_this.callbacksIndex,_this.argv.length))){
+                    if(!e.callback.call(_this,e.arguments.log, _this.argv.slice(_this.callbacksIndex,_this.argv.length),e)){
                         process.exit();
                     };
                 };
@@ -260,7 +265,7 @@ command.prototype = {
                         break;
                 };
             }else{
-                initData.init.call(this,initData.Str,initData.StrTitle,initData.arguments);
+                initData.init.call(this,initData.Str,initData.StrTitle,initData.arguments,initData);
             };
         };
         this.showHelp(showCallback,"init");

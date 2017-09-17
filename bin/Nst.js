@@ -35,6 +35,19 @@ var Nst = function () {
                 }
             })
             .Commands({
+                log:["-s","...warn('<httpUrl>')","指定访问路径，包含端口号，例如：127.0.0.1:8080"],
+                callback:function (oldArgv,newArgv) {
+                    if(newArgv.length > 0 && newArgv[0].split(":").length > 1){
+                        return newNst.createService.call(this,{
+                            host:newArgv[0].split(":")[0],
+                            port:parseInt(newArgv[0].split(":")[1]),
+                        });
+                    }else{
+                        newCommand.ERR("参数错误，例如：127.0.0.1:8080");
+                    }
+                }
+            })
+            .Commands({
                 log:["-host","...warn('<host>')","指定访问地址，例如127.0.0.1/192.168...等"],
                 callback:function (oldArgv,newArgv) {
                     return newNst.createService.call(this,{
@@ -70,14 +83,7 @@ Nst.prototype = {
     showHelp:function () {
         this
             .Options({
-                log:["-h","查看帮助命令"]
-            })
-            .Options({
-                log:["help","查看帮助命令"]
-            })
-            .Options({
-                log:["--version","查看版本号"],
-                callback:function () {newNst._version();}
+                log:["help","...info('[-h]')","查看帮助命令"]
             })
             .end(function () {
                 this.showHelp();
@@ -86,21 +92,37 @@ Nst.prototype = {
 }
 var newNst = new Nst();
 newCommand
+    .end(function () {
+        this.console
+            .color(function () {
+                this
+                    .log(`where`)
+                    .info(" <command|options> ")
+                    .log("is one of:");
+            })
+            .log(`    -s, serve, -v, --version, -h, help`)
+    })
     .Commands({
-        log:["-s","服务命令"],
+        log:["-s"],
+        output:false,
         callback:function () {
             this.init(null,Function);
             return newNst.publicCommand._server(this);
         }
     })
     .Commands({
-        log:["-serve","服务命令"],
+        log:["serve","...info('[-s]')","服务命令"],
         callback:function () {
             return newNst.publicCommand._server(this);
         }
     })
     .Options({
         log:["-v","查看版本号"],
+        output:false,
+        callback:function () {newNst._version();}
+    })
+    .Options({
+        log:["--version","...info('[-v]')","查看版本号"],
         callback:function () {newNst._version();}
     })
     .end(function () {

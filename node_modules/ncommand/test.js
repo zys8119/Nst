@@ -39,9 +39,17 @@ new command()
     })
     .Options({
         log:["c"],
-        callback:function (w,e) {
+        callback:function (w,e,cmds) {
             this.console.warn("我是当前的argv参数："+w);
             this.console.warn("我是c命令之后的argv参数："+e);
+            this.console.warn("我是当前命令的相关参数："+JSON.stringify(cmds));
+        }
+    })
+    .Options({
+        log:["d"],
+        output:false,
+        callback:function (w,e) {
+            this.console.warn("我是隐藏命令，我不输出，但我确实存在，哈哈。");
         }
     })
     .init();
