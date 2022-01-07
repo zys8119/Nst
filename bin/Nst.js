@@ -10,6 +10,7 @@ const fs = require("fs");
 const path = require("path");
 const newCommand = new command();
 const newNserve = new Nserve();
+var gitProxyPath = path.resolve(__dirname,"gitProxy.json");
 var Nst = function () {
     this.publicCommand = {
         _server:function (serverCommands) {
@@ -95,7 +96,6 @@ Nst.prototype = {
             })
     },
     getProxyConfig:function (){
-        var gitProxyPath = path.resolve(__dirname,"gitProxy.json");
         if(!fs.existsSync(gitProxyPath)){
             fs.writeFileSync(gitProxyPath,JSON.stringify({
                 "all":"清除全局代理配置"
@@ -120,7 +120,7 @@ Nst.prototype = {
         if(!bool || ["-help","-h"].includes((argv[1] || "").toLowerCase())){
             serverCommands
                 .Commands({
-                    log:["ls","全局GIT代理映射"],
+                    log:["ls","查看全局GIT代理映射"],
                 })
                 .Commands({
                     log:["use","<proxyName | all> 使用全局GIT代理映射"],
@@ -138,9 +138,10 @@ Nst.prototype = {
         }else {
             try {
                 var gitProxyJson = this.getProxyConfig();
+                var bool = argv[1].toLowerCase() === "all";
                 switch (type){
                     case "use":
-                        if(argv[1].toLowerCase() === "all"){
+                        if(bool){
                             execSync("git config --global --unset http.nstproxyname");
                             execSync("git config --global --unset http.proxy");
                             execSync("git config --global --unset https.proxy");
@@ -155,13 +156,20 @@ Nst.prototype = {
                         }
                         break;
                     case "add":
-
-                        // execSync("git config --global http.proxy " + argv[2]);
-                        // execSync("git config --global https.proxy " + argv[2]);
+                        if(bool){
+                            ncol.error(`"${argv[1]}" 名称为保留字段，禁止覆盖`)
+                        }else {
+                            gitProxyJson[argv[1]] = argv[2];
+                            fs.writeFileSync(gitProxyPath, JSON.stringify(gitProxyJson,null,4))
+                        }
                         break;
                     case "rm":
-                        // execSync("git config --global http.proxy " + argv[2]);
-                        // execSync("git config --global https.proxy " + argv[2]);
+                        if(bool){
+                            ncol.error(`"${argv[1]}" 名称为保留字段，禁止覆盖`)
+                        }else {
+                            delete gitProxyJson[argv[1]];
+                            fs.writeFileSync(gitProxyPath, JSON.stringify(gitProxyJson,null,4))
+                        }
                         break;
                 }
             }catch (e){}
@@ -227,7 +235,7 @@ var newNstInit = function (newCommand){
             }
         })
         .Commands({
-            log:["ls","全局GIT代理映射"],
+            log:["ls","查看全局GIT代理映射"],
             callback:function () {newNst.ls();}
         })
         .Commands({
@@ -236,7 +244,7 @@ var newNstInit = function (newCommand){
         })
         .Commands({
             log:["add","<proxyName> <proxyAddress> 添加全局GIT代理映射"],
-            callback:function () {return newNst.proxyHelp(this, "use");}
+            callback:function () {return newNst.proxyHelp(this, "add");}
         })
         .Commands({
             log:["rm","<proxyName> 删除全局GIT代理映射"],
