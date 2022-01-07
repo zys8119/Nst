@@ -4,6 +4,10 @@
 const command = require("ncommand");
 const Nserve = require("../index");
 var version = require("../package.json").version;
+var {execSync} = require("child_process");
+var ncol = require("ncol");
+const fs = require("fs");
+const path = require("path");
 const newCommand = new command();
 const newNserve = new Nserve();
 var Nst = function () {
@@ -62,7 +66,8 @@ var Nst = function () {
                         InitHomefile:newArgv[0],
                     });
                 }
-            }).end(function () {
+            })
+            .end(function () {
                 newNst.showHelp.call(this);
             });
             return true;
@@ -88,44 +93,179 @@ Nst.prototype = {
             .end(function () {
                 this.showHelp();
             })
-    }
+    },
+    getProxyConfig:function (){
+        var gitProxyPath = path.resolve(__dirname,"gitProxy.json");
+        if(!fs.existsSync(gitProxyPath)){
+            fs.writeFileSync(gitProxyPath,JSON.stringify({
+                "all":"清除全局代理配置"
+            }, null, 4))
+        }
+        var gitProxyJson = {};
+        try {
+            gitProxyJson = JSON.parse(fs.readFileSync(gitProxyPath).toString())
+        }catch (e) {}
+        return gitProxyJson;
+    },
+    /**
+     * 使用全局GIT代理映射
+     */
+    proxyHelp:function (serverCommands, type){
+        var argv = serverCommands.argv;
+        var bool = argv.slice(1).length === ({
+            rm:1,
+            use:1,
+            add:2,
+        }[type])
+        if(!bool || ["-help","-h"].includes((argv[1] || "").toLowerCase())){
+            serverCommands
+                .Commands({
+                    log:["ls","全局GIT代理映射"],
+                })
+                .Commands({
+                    log:["use","<proxyName | all> 使用全局GIT代理映射"],
+                })
+                .Commands({
+                    log:["add","<proxyName> <proxyAddress> 添加全局GIT代理映射"],
+                })
+                .Commands({
+                    log:["rm","<proxyName> 删除全局GIT代理映射"],
+                })
+                .end(function () {
+                    this.showHelp();
+                });
+            return true
+        }else {
+            try {
+                var gitProxyJson = this.getProxyConfig();
+                switch (type){
+                    case "use":
+                        if(argv[1].toLowerCase() === "all"){
+                            execSync("git config --global --unset http.nstproxyname");
+                            execSync("git config --global --unset http.proxy");
+                            execSync("git config --global --unset https.proxy");
+                        }else {
+                            if(gitProxyJson[argv[1]]){
+                                execSync("git config --global http.nstproxyname " + argv[1]);
+                                execSync("git config --global http.proxy " + gitProxyJson[argv[1]]);
+                                execSync("git config --global https.proxy " + gitProxyJson[argv[1]]);
+                            }else {
+                                ncol.error(`无效配置名称 "${argv[1]}" ,请先使用 add 命令添加代理配置`)
+                            }
+                        }
+                        break;
+                    case "add":
+
+                        // execSync("git config --global http.proxy " + argv[2]);
+                        // execSync("git config --global https.proxy " + argv[2]);
+                        break;
+                    case "rm":
+                        // execSync("git config --global http.proxy " + argv[2]);
+                        // execSync("git config --global https.proxy " + argv[2]);
+                        break;
+                }
+            }catch (e){}
+            this.ls();
+        }
+    },
+    ls:function (){
+        var gitProxyJson = this.getProxyConfig();
+        var listProxy = execSync("git config --global -l").toString().match(/(http|https)\.(proxy|nstproxyname).*/img) || [];
+        var keys = Object.keys(gitProxyJson);
+        var maxK = (keys || []).reduce((a,b)=>(a.length - b.length > 0 ?a:b),"");
+        var proxyname = listProxy.find(e=>/http.nstproxyname/.test(e))
+        if(proxyname){
+            proxyname = /(?:=(.*))/.exec(proxyname);
+            if(proxyname[1]){
+                proxyname = proxyname[1].trim();
+            }
+        }
+        var address = null;
+        if(!proxyname && listProxy && listProxy.length > 0){
+            address = /(?:=(.*))/.exec(listProxy[0])
+            if(address[1]){
+                address = address[1].trim();
+            }
+        }
+        var isActive = false;
+        keys.forEach(k=>{
+            ncol.color(function (){
+                var keyName = k+" "+"-".repeat(maxK.length - k.length + 5)+" ";
+                var value = gitProxyJson[k];
+                if((k === proxyname || value === address) && !isActive){
+                    this.success("* "+keyName+value);
+                    isActive = true;
+                }else {
+                    this
+                        .log("  ")
+                        .log(keyName)
+                        .info(value)
+                }
+            })
+        })
+    },
 }
 var newNst = new Nst();
-newCommand
-    .end(function () {
-        this.console
-            .color(function () {
-                this
-                    .log(`where`)
-                    .info(" <command|options> ")
-                    .log("is one of:");
-            })
-            .log(`    -s, serve, -v, --version, -h, help`)
-    })
-    .Commands({
-        log:["-s"],
-        output:false,
-        callback:function () {
-            this.init(null,Function);
-            return newNst.publicCommand._server(this);
-        }
-    })
-    .Commands({
-        log:["serve","...info('[-s]')","服务命令"],
-        callback:function () {
-            return newNst.publicCommand._server(this);
-        }
-    })
-    .Options({
-        log:["-v","查看版本号"],
-        output:false,
-        callback:function () {newNst._version();}
-    })
-    .Options({
-        log:["--version","...info('[-v]')","查看版本号"],
-        callback:function () {newNst._version();}
-    })
-    .end(function () {
-        newNst.showHelp.call(this);
-    })
-    .init(null,Function);
+var newNstInit = function (newCommand){
+    newCommand
+        .end(function () {
+            this.console
+                .color(function () {
+                    this
+                        .log(`where`)
+                        .info(" <command|options> ")
+                        .log("is one of:");
+                })
+                .log(`    -s, serve, -v, --version, -h, help`)
+        })
+        .Commands({
+            log:["-s"],
+            output:false,
+            callback:function () {
+                this.init(null,Function);
+                return newNst.publicCommand._server(this);
+            }
+        })
+        .Commands({
+            log:["ls","全局GIT代理映射"],
+            callback:function () {newNst.ls();}
+        })
+        .Commands({
+            log:["use","<proxyName> 使用全局GIT代理映射"],
+            callback:function () {return newNst.proxyHelp(this, "use");}
+        })
+        .Commands({
+            log:["add","<proxyName> <proxyAddress> 添加全局GIT代理映射"],
+            callback:function () {return newNst.proxyHelp(this, "use");}
+        })
+        .Commands({
+            log:["rm","<proxyName> 删除全局GIT代理映射"],
+            callback:function () {return newNst.proxyHelp(this, "rm");}
+        })
+        .Commands({
+            log:["serve","...info('[-s]')","服务命令"],
+            callback:function () {
+                return newNst.publicCommand._server(this);
+            }
+        })
+        .Options({
+            log:["-v","查看版本号"],
+            output:false,
+            callback:function () {newNst._version();}
+        })
+        .Options({
+            log:["--version","...info('[-v]')","查看版本号"],
+            callback:function () {newNst._version();}
+        })
+        .Options({
+            log:["--","...info('[-v]')","查看版本号"],
+            callback:function () {newNst._version();}
+        })
+        .end(function () {
+            newNst.showHelp.call(this);
+        })
+        .init(null,Function);
+}
+
+newNstInit(newCommand);
+
