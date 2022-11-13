@@ -1,6 +1,6 @@
 {
   "name": "nst",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "一个node服务工具，可快速便捷创建一个web服务，及其他功能",
   "main": "index.js",
   "bin": "bin/Nst.js",
