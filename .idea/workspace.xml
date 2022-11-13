@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5d25978c-91d9-4daa-b678-90d3271bf8bb" name="Default" comment="[add] npm 全局代理配置">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/Nst.js" beforeDir="false" afterPath="$PROJECT_DIR$/bin/Nst.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-    </list>
+    <list default="true" id="5d25978c-91d9-4daa-b678-90d3271bf8bb" name="Default" comment="[add] npm 全局代理配置" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -616,7 +612,7 @@
       <workItem from="1641518570699" duration="9339000" />
       <workItem from="1641572047252" duration="1203000" />
       <workItem from="1668308540926" duration="1144000" />
-      <workItem from="1668309749803" duration="1487000" />
+      <workItem from="1668309749803" duration="1756000" />
     </task>
     <task id="LOCAL-00001" summary="[add] git 全局代理配置">
       <created>1641526745793</created>
@@ -639,7 +635,14 @@
       <option name="project" value="LOCAL" />
       <updated>1668309052544</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="[add] npm 全局代理配置">
+      <created>1668311546540</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1668311546540</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
