@@ -145,11 +145,15 @@ Nst.prototype = {
                             execSync("git config --global --unset http.nstproxyname");
                             execSync("git config --global --unset http.proxy");
                             execSync("git config --global --unset https.proxy");
+                            execSync("npm config delete proxy");
+                            execSync("npm config delete https-proxy");
                         }else {
                             if(gitProxyJson[argv[1]]){
                                 execSync("git config --global http.nstproxyname " + argv[1]);
                                 execSync("git config --global http.proxy " + gitProxyJson[argv[1]]);
                                 execSync("git config --global https.proxy " + gitProxyJson[argv[1]]);
+                                execSync("npm config set proxy " + gitProxyJson[argv[1]]);
+                                execSync("npm config set https-proxy " + gitProxyJson[argv[1]]);
                             }else {
                                 ncol.error(`无效配置名称 "${argv[1]}" ,请先使用 add 命令添加代理配置`)
                             }
